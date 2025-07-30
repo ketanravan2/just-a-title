@@ -248,9 +248,10 @@ export const IndividualAssignment: React.FC = () => {
           onLinkChildSerials={linkChildSerials}
           availableBuyerPartNumbers={availableItems.map(item => item.buyerPartNumber)}
           hideAssignmentDialog={true}
-          hideCreateButtons={assignmentType === 'package'} // Hide for package selection
+          hideCreateButtons={assignmentType === 'package'} // Hide for package, enable for items/lots
           assignmentMode="simple"
           assignmentContext={assignmentContext}
+          contextualBuyerPartNumber={assignmentContext?.buyerPartNumber}
         />
       )}
 

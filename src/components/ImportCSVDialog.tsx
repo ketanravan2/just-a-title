@@ -18,6 +18,7 @@ interface ImportCSVDialogProps {
     buyerPartNumber: string;
   }) => void;
   availableBuyerPartNumbers: string[];
+  contextualBuyerPartNumber?: string;
 }
 
 export const ImportCSVDialog: React.FC<ImportCSVDialogProps> = ({
@@ -25,8 +26,9 @@ export const ImportCSVDialog: React.FC<ImportCSVDialogProps> = ({
   onOpenChange,
   onImportCSV,
   availableBuyerPartNumbers,
+  contextualBuyerPartNumber,
 }) => {
-  const [buyerPartNumber, setBuyerPartNumber] = useState('');
+  const [buyerPartNumber, setBuyerPartNumber] = useState(contextualBuyerPartNumber || '');
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +109,7 @@ export const ImportCSVDialog: React.FC<ImportCSVDialogProps> = ({
     });
 
     // Reset form
-    setBuyerPartNumber('');
+    setBuyerPartNumber(contextualBuyerPartNumber || '');
     setCsvData([]);
     setError('');
     if (fileInputRef.current) {
@@ -129,7 +131,11 @@ export const ImportCSVDialog: React.FC<ImportCSVDialogProps> = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="buyerPartNumber">Buyer Part Number</Label>
-            <Select value={buyerPartNumber} onValueChange={setBuyerPartNumber}>
+            <Select 
+              value={buyerPartNumber} 
+              onValueChange={setBuyerPartNumber}
+              disabled={!!contextualBuyerPartNumber}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select buyer part number" />
               </SelectTrigger>

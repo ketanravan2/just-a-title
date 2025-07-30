@@ -15,6 +15,7 @@ interface BulkCreateDialogProps {
     buyerPartNumber: string;
   }) => void;
   availableBuyerPartNumbers: string[];
+  contextualBuyerPartNumber?: string;
 }
 
 export const BulkCreateDialog: React.FC<BulkCreateDialogProps> = ({
@@ -22,11 +23,12 @@ export const BulkCreateDialog: React.FC<BulkCreateDialogProps> = ({
   onOpenChange,
   onBulkCreate,
   availableBuyerPartNumbers,
+  contextualBuyerPartNumber,
 }) => {
   const [prefix, setPrefix] = useState('');
   const [startNumber, setStartNumber] = useState(1);
   const [count, setCount] = useState(10);
-  const [buyerPartNumber, setBuyerPartNumber] = useState('');
+  const [buyerPartNumber, setBuyerPartNumber] = useState(contextualBuyerPartNumber || '');
 
   const handleSubmit = () => {
     if (!prefix || !buyerPartNumber || count < 1) return;
@@ -42,7 +44,7 @@ export const BulkCreateDialog: React.FC<BulkCreateDialogProps> = ({
     setPrefix('');
     setStartNumber(1);
     setCount(10);
-    setBuyerPartNumber('');
+    setBuyerPartNumber(contextualBuyerPartNumber || '');
     onOpenChange(false);
   };
 
@@ -101,7 +103,11 @@ export const BulkCreateDialog: React.FC<BulkCreateDialogProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="buyerPartNumber">Buyer Part Number</Label>
-            <Select value={buyerPartNumber} onValueChange={setBuyerPartNumber}>
+            <Select 
+              value={buyerPartNumber} 
+              onValueChange={setBuyerPartNumber}
+              disabled={!!contextualBuyerPartNumber}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select buyer part number" />
               </SelectTrigger>

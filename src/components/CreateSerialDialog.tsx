@@ -15,6 +15,7 @@ interface CreateSerialDialogProps {
     customAttributes: Record<string, string>;
   }) => void;
   availableBuyerPartNumbers: string[];
+  contextualBuyerPartNumber?: string;
 }
 
 export const CreateSerialDialog: React.FC<CreateSerialDialogProps> = ({
@@ -22,9 +23,10 @@ export const CreateSerialDialog: React.FC<CreateSerialDialogProps> = ({
   onOpenChange,
   onCreateSerial,
   availableBuyerPartNumbers,
+  contextualBuyerPartNumber,
 }) => {
   const [serialNumber, setSerialNumber] = useState('');
-  const [buyerPartNumber, setBuyerPartNumber] = useState('');
+  const [buyerPartNumber, setBuyerPartNumber] = useState(contextualBuyerPartNumber || '');
   const [customAttributes, setCustomAttributes] = useState<Array<{key: string, value: string}>>([]);
 
   const handleAddAttribute = () => {
@@ -59,7 +61,7 @@ export const CreateSerialDialog: React.FC<CreateSerialDialogProps> = ({
 
     // Reset form
     setSerialNumber('');
-    setBuyerPartNumber('');
+    setBuyerPartNumber(contextualBuyerPartNumber || '');
     setCustomAttributes([]);
     onOpenChange(false);
   };
@@ -87,7 +89,11 @@ export const CreateSerialDialog: React.FC<CreateSerialDialogProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="buyerPartNumber">Buyer Part Number</Label>
-            <Select value={buyerPartNumber} onValueChange={setBuyerPartNumber}>
+            <Select 
+              value={buyerPartNumber} 
+              onValueChange={setBuyerPartNumber}
+              disabled={!!contextualBuyerPartNumber}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select buyer part number" />
               </SelectTrigger>

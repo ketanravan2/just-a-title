@@ -3,7 +3,25 @@ import { SerialAssignmentInterface } from '@/components/SerialAssignmentInterfac
 import { useAppState } from '@/contexts/AppStateContext';
 
 const Serials: React.FC = () => {
-  const { serials, assignSerials } = useAppState();
+  const { 
+    serials, 
+    assignSerials, 
+    createSerial, 
+    bulkCreateSerials, 
+    importSerialsFromCSV, 
+    linkChildSerials,
+    asnHierarchy 
+  } = useAppState();
+
+  // Extract available buyer part numbers from ASN hierarchy
+  const availableBuyerPartNumbers = Array.from(
+    new Set(
+      asnHierarchy.items.flatMap(item => [
+        item.buyerPartNumber,
+        ...item.lots.map(lot => lot.buyerPartNumber)
+      ]).filter(Boolean)
+    )
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -11,6 +29,12 @@ const Serials: React.FC = () => {
         <SerialAssignmentInterface
           serials={serials}
           onAssignSerials={assignSerials}
+          onCreateSerial={createSerial}
+          onBulkCreate={bulkCreateSerials}
+          onImportCSV={importSerialsFromCSV}
+          onLinkChildSerials={linkChildSerials}
+          availableBuyerPartNumbers={availableBuyerPartNumbers}
+          hideCreateButtons={false} // Enable create buttons in main serials view
         />
       </div>
     </div>

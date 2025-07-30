@@ -28,6 +28,7 @@ interface SerialAssignmentInterfaceProps {
   className?: string;
   hideAssignmentDialog?: boolean;
   hideCreateButtons?: boolean;
+  contextualBuyerPartNumber?: string; // When context provides part number
   assignmentMode?: 'full' | 'simple';
   assignmentContext?: {
     type: 'item' | 'lot' | 'pack';
@@ -51,6 +52,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
   hideCreateButtons = false,
   assignmentMode = 'full',
   assignmentContext,
+  contextualBuyerPartNumber,
 }) => {
   const { toast } = useToast();
   
@@ -433,6 +435,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
         onOpenChange={setCreateDialog}
         onCreateSerial={handleCreateSerial}
         availableBuyerPartNumbers={availableBuyerPartNumbers}
+        contextualBuyerPartNumber={contextualBuyerPartNumber}
       />
 
       {/* Bulk create dialog */}
@@ -441,6 +444,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
         onOpenChange={setBulkCreateDialog}
         onBulkCreate={handleBulkCreate}
         availableBuyerPartNumbers={availableBuyerPartNumbers}
+        contextualBuyerPartNumber={contextualBuyerPartNumber}
       />
 
       {/* Import CSV dialog */}
@@ -449,6 +453,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
         onOpenChange={setImportDialog}
         onImportCSV={handleImportCSV}
         availableBuyerPartNumbers={availableBuyerPartNumbers}
+        contextualBuyerPartNumber={contextualBuyerPartNumber}
       />
     </div>
   );
