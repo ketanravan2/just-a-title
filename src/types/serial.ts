@@ -9,6 +9,9 @@ export interface Serial {
   assignedToType?: 'item' | 'lot' | 'package';
   createdAt: Date;
   updatedAt: Date;
+  customAttributes?: Record<string, string>;
+  childSerials?: string[];
+  parentSerial?: string;
 }
 
 export interface Item {

@@ -9,7 +9,7 @@ import { Package, Box, Container, Plus, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const IndividualAssignment: React.FC = () => {
-  const { serials, asnHierarchy, assignSerials } = useAppState();
+  const { serials, asnHierarchy, assignSerials, createSerial, bulkCreateSerials, importSerialsFromCSV, linkChildSerials } = useAppState();
   const { toast } = useToast();
   const [assignmentType, setAssignmentType] = useState<'items' | 'package'>('items');
   const [selectedItem, setSelectedItem] = useState<string>('');
@@ -146,21 +146,6 @@ export const IndividualAssignment: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Actions row */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button size="sm" variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Create Serial
-            </Button>
-            <Button size="sm" variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Bulk Create
-            </Button>
-            <Button size="sm" variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Import CSV
-            </Button>
-          </div>
 
           <div className="space-y-2">
             <Label>Assignment Level</Label>
@@ -257,7 +242,13 @@ export const IndividualAssignment: React.FC = () => {
         <SerialAssignmentInterface
           serials={filteredSerials}
           onAssignSerials={handleAssignSerials}
+          onCreateSerial={createSerial}
+          onBulkCreate={bulkCreateSerials}
+          onImportCSV={importSerialsFromCSV}
+          onLinkChildSerials={linkChildSerials}
+          availableBuyerPartNumbers={availableItems.map(item => item.buyerPartNumber)}
           hideAssignmentDialog={true}
+          hideCreateButtons={assignmentType === 'package'} // Hide for package selection
           assignmentMode="simple"
           assignmentContext={assignmentContext}
         />

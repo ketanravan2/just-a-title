@@ -1,8 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Serial, DragData } from '@/types/serial';
+import { Serial } from '@/types/serial';
 import { SerialCard } from './SerialCard';
 import { ActionBar } from './ActionBar';
 import { AssignmentDialog } from './AssignmentDialog';
+import { SerialInfoDialog } from './SerialInfoDialog';
+import { LinkChildSerialsDialog } from './LinkChildSerialsDialog';
+import { CreateSerialDialog } from './CreateSerialDialog';
+import { BulkCreateDialog } from './BulkCreateDialog';
+import { ImportCSVDialog } from './ImportCSVDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +15,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Search, Filter, CheckSquare, Square, Plus } from 'lucide-react';
+import { Search, CheckSquare, Square, Plus } from 'lucide-react';
 
 interface SerialAssignmentInterfaceProps {
   serials: Serial[];
   onAssignSerials: (serialIds: string[], targetId: string, targetType: 'item' | 'lot' | 'package') => void;
+  onCreateSerial?: (serialData: { serialNumber: string; buyerPartNumber: string; customAttributes: Record<string, string> }) => void;
+  onBulkCreate?: (data: { prefix: string; startNumber: number; count: number; buyerPartNumber: string }) => void;
+  onImportCSV?: (data: { serials: Array<{ serialNumber: string; customAttributes: Record<string, string> }>; buyerPartNumber: string }) => void;
+  onLinkChildSerials?: (parentSerialId: string, childSerialIds: string[]) => void;
+  availableBuyerPartNumbers?: string[];
   className?: string;
   hideAssignmentDialog?: boolean;
+  hideCreateButtons?: boolean;
   assignmentMode?: 'full' | 'simple';
   assignmentContext?: {
     type: 'item' | 'lot' | 'pack';
@@ -30,8 +41,14 @@ interface SerialAssignmentInterfaceProps {
 export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps> = ({
   serials,
   onAssignSerials,
+  onCreateSerial,
+  onBulkCreate,
+  onImportCSV,
+  onLinkChildSerials,
+  availableBuyerPartNumbers = [],
   className,
   hideAssignmentDialog = false,
+  hideCreateButtons = false,
   assignmentMode = 'full',
   assignmentContext,
 }) => {
@@ -48,7 +65,11 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
     open: boolean;
     type: 'item' | 'lot' | 'package' | null;
   }>({ open: false, type: null });
-  const [dragOverSerial, setDragOverSerial] = useState<string | null>(null);
+  const [infoDialog, setInfoDialog] = useState<{ open: boolean; serial: Serial | null }>({ open: false, serial: null });
+  const [linkDialog, setLinkDialog] = useState<{ open: boolean; serial: Serial | null }>({ open: false, serial: null });
+  const [createDialog, setCreateDialog] = useState(false);
+  const [bulkCreateDialog, setBulkCreateDialog] = useState(false);
+  const [importDialog, setImportDialog] = useState(false);
 
   // Filter and search serials
   const filteredSerials = useMemo(() => {
@@ -176,25 +197,47 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
   const hasUnassignedSerials = selectedSerialsData.some(s => s.status === 'unassigned');
   const hasAssignedSerials = selectedSerialsData.some(s => s.status !== 'unassigned');
 
-  // Drag and drop handlers
-  const handleDragStart = useCallback((event: React.DragEvent) => {
-    const dragData: DragData = {
-      serialIds: Array.from(selectedSerials),
-      type: 'serial-selection',
-    };
-    
-    event.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    event.dataTransfer.effectAllowed = 'move';
-  }, [selectedSerials]);
-
-  const handleDragOver = useCallback((event: React.DragEvent, serialId: string) => {
-    event.preventDefault();
-    setDragOverSerial(serialId);
+  // Dialog handlers
+  const handleShowInfo = useCallback((serial: Serial) => {
+    setInfoDialog({ open: true, serial });
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    setDragOverSerial(null);
+  const handleLinkChild = useCallback((serial: Serial) => {
+    setLinkDialog({ open: true, serial });
   }, []);
+
+  // Create handlers
+  const handleCreateSerial = useCallback((data: { serialNumber: string; buyerPartNumber: string; customAttributes: Record<string, string> }) => {
+    onCreateSerial?.(data);
+    toast({
+      title: "Serial created",
+      description: `Serial ${data.serialNumber} created successfully.`,
+    });
+  }, [onCreateSerial, toast]);
+
+  const handleBulkCreate = useCallback((data: { prefix: string; startNumber: number; count: number; buyerPartNumber: string }) => {
+    onBulkCreate?.(data);
+    toast({
+      title: "Bulk create successful",
+      description: `${data.count} serials created successfully.`,
+    });
+  }, [onBulkCreate, toast]);
+
+  const handleImportCSV = useCallback((data: { serials: Array<{ serialNumber: string; customAttributes: Record<string, string> }>; buyerPartNumber: string }) => {
+    onImportCSV?.(data);
+    toast({
+      title: "Import successful",
+      description: `${data.serials.length} serials imported successfully.`,
+    });
+  }, [onImportCSV, toast]);
+
+  const handleLinkChildSerials = useCallback((parentSerialId: string, childSerialIds: string[]) => {
+    onLinkChildSerials?.(parentSerialId, childSerialIds);
+    toast({
+      title: "Child serials linked",
+      description: `${childSerialIds.length} child serial${childSerialIds.length !== 1 ? 's' : ''} linked successfully.`,
+    });
+  }, [onLinkChildSerials, toast]);
 
   const allSelected = filteredSerials.length > 0 && selectedSerials.size === filteredSerials.length;
   const someSelected = selectedSerials.size > 0 && selectedSerials.size < filteredSerials.length;
@@ -208,22 +251,42 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Actions row */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Create Serial
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Bulk Create
-              </Button>
-              <Button size="sm" variant="outline" className="gap-2">
-                <Plus className="w-4 h-4" />
-                Import CSV
-              </Button>
+          {!hideCreateButtons && (
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setCreateDialog(true)}
+                  disabled={!onCreateSerial}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Serial
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setBulkCreateDialog(true)}
+                  disabled={!onBulkCreate}
+                >
+                  <Plus className="w-4 h-4" />
+                  Bulk Create
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setImportDialog(true)}
+                  disabled={!onImportCSV}
+                >
+                  <Plus className="w-4 h-4" />
+                  Import CSV
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Search and filters */}
           <div className="flex flex-col sm:flex-row gap-4">
@@ -289,9 +352,9 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
             key={serial.id}
             serial={serial}
             isSelected={selectedSerials.has(serial.id)}
-            isDragOver={dragOverSerial === serial.id}
             onSelect={handleSerialSelect}
-            onDragStart={handleDragStart}
+            onShowInfo={handleShowInfo}
+            onLinkChild={handleLinkChild}
             className="animate-in fade-in-0 duration-200"
           />
         ))}
@@ -346,6 +409,47 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
           onAssign={handleAssignment}
         />
       )}
+
+      {/* Info dialog */}
+      <SerialInfoDialog
+        open={infoDialog.open}
+        onOpenChange={(open) => setInfoDialog({ open, serial: null })}
+        serial={infoDialog.serial}
+      />
+
+      {/* Link child serials dialog */}
+      <LinkChildSerialsDialog
+        open={linkDialog.open}
+        onOpenChange={(open) => setLinkDialog({ open, serial: null })}
+        parentSerial={linkDialog.serial}
+        availableSerials={serials}
+        availableBuyerPartNumbers={availableBuyerPartNumbers}
+        onLinkSerials={handleLinkChildSerials}
+      />
+
+      {/* Create serial dialog */}
+      <CreateSerialDialog
+        open={createDialog}
+        onOpenChange={setCreateDialog}
+        onCreateSerial={handleCreateSerial}
+        availableBuyerPartNumbers={availableBuyerPartNumbers}
+      />
+
+      {/* Bulk create dialog */}
+      <BulkCreateDialog
+        open={bulkCreateDialog}
+        onOpenChange={setBulkCreateDialog}
+        onBulkCreate={handleBulkCreate}
+        availableBuyerPartNumbers={availableBuyerPartNumbers}
+      />
+
+      {/* Import CSV dialog */}
+      <ImportCSVDialog
+        open={importDialog}
+        onOpenChange={setImportDialog}
+        onImportCSV={handleImportCSV}
+        availableBuyerPartNumbers={availableBuyerPartNumbers}
+      />
     </div>
   );
 };
