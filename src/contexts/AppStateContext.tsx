@@ -12,7 +12,8 @@ interface AppStateContextType {
     serialIds: string[], 
     targetId: string, 
     targetType: 'item' | 'lot' | 'package',
-    isTemporary?: boolean
+    isTemporary?: boolean,
+    targetName?: string
   ) => void;
   createSerial: (data: {
     serialNumber: string;
@@ -33,6 +34,8 @@ interface AppStateContextType {
     buyerPartNumber: string;
   }) => void;
   linkChildSerials: (parentSerialId: string, childSerialIds: string[]) => void;
+  getSerialsByBuyerPartNumber: (buyerPartNumber: string) => Serial[];
+  getAssignedSerials: (targetId: string, targetType: 'item' | 'lot' | 'package') => Serial[];
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -49,21 +52,47 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     serialIds: string[], 
     targetId: string, 
     targetType: 'item' | 'lot' | 'package',
-    isTemporary?: boolean
+    isTemporary?: boolean,
+    targetName?: string
   ) => {
     setSerials(prevSerials =>
-      prevSerials.map(serial =>
-        serialIds.includes(serial.id)
-          ? {
-              ...serial,
-              status: targetId === '' ? 'unassigned' as const : 
-                     (isTemporary ? 'reserved' as const : 'assigned' as const),
-              assignedTo: targetId === '' ? undefined : targetId,
-              assignedToType: targetId === '' ? undefined : targetType,
-              updatedAt: new Date(),
-            }
-          : serial
-      )
+      prevSerials.map(serial => {
+        if (!serialIds.includes(serial.id)) return serial;
+        
+        // Check if serial is already assigned to prevent double assignment
+        if (serial.assignedTo && serial.assignedTo !== targetId && targetId !== '') {
+          console.warn(`Serial ${serial.serialNumber} is already assigned to ${serial.assignedTo}`);
+          return serial;
+        }
+        
+        if (targetId === '') {
+          // Unassign serial
+          return {
+            ...serial,
+            status: 'unassigned' as const,
+            assignedTo: undefined,
+            assignedToType: undefined,
+            assignmentDetails: undefined,
+            updatedAt: new Date(),
+          };
+        } else {
+          // Assign serial
+          return {
+            ...serial,
+            status: isTemporary ? 'reserved' as const : 'assigned' as const,
+            assignedTo: targetId,
+            assignedToType: targetType,
+            assignmentDetails: {
+              targetId,
+              targetType,
+              targetName: targetName || targetId,
+              assignedAt: new Date(),
+              isTemporary,
+            },
+            updatedAt: new Date(),
+          };
+        }
+      })
     );
   };
 
@@ -127,10 +156,12 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     setSerials(prevSerials =>
       prevSerials.map(serial => {
         if (serial.id === parentSerialId) {
-          // Update parent serial
+          // Update parent serial - merge with existing child serials, avoid duplicates
+          const existingChildSerials = serial.childSerials || [];
+          const newChildSerials = [...new Set([...existingChildSerials, ...childSerialIds])];
           return {
             ...serial,
-            childSerials: [...(serial.childSerials || []), ...childSerialIds],
+            childSerials: newChildSerials,
             updatedAt: new Date(),
           };
         } else if (childSerialIds.includes(serial.id)) {
@@ -146,6 +177,16 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
   };
 
+  const getSerialsByBuyerPartNumber = (buyerPartNumber: string): Serial[] => {
+    return serials.filter(serial => serial.buyerPartNumber === buyerPartNumber);
+  };
+
+  const getAssignedSerials = (targetId: string, targetType: 'item' | 'lot' | 'package'): Serial[] => {
+    return serials.filter(serial => 
+      serial.assignedTo === targetId && serial.assignedToType === targetType
+    );
+  };
+
   return (
     <AppStateContext.Provider value={{
       serials,
@@ -156,6 +197,8 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
       bulkCreateSerials,
       importSerialsFromCSV,
       linkChildSerials,
+      getSerialsByBuyerPartNumber,
+      getAssignedSerials,
     }}>
       {children}
     </AppStateContext.Provider>

@@ -1,0 +1,11 @@
+serialNumber,manufacturer,model,color,warranty,notes
+CPU001001,Intel,Core i7-12700K,N/A,3 years,High performance processor
+CPU001002,Intel,Core i5-12600K,N/A,3 years,Mid-range processor
+CPU001003,AMD,Ryzen 7 5800X,N/A,3 years,Gaming optimized
+MEM002001,Corsair,DDR4-3200,Black,Lifetime,32GB Kit
+MEM002002,Kingston,DDR4-2666,Silver,Lifetime,16GB Kit
+MEM002003,G.Skill,DDR4-3600,RGB,Lifetime,64GB Kit
+GPU003001,NVIDIA,RTX 4080,Black,2 years,High-end graphics
+GPU003002,AMD,RX 7800 XT,Red,2 years,Gaming graphics
+NIC004001,Intel,E1000,Silver,1 year,Gigabit Ethernet
+NIC004002,Broadcom,BCM5720,Green,1 year,Dual port

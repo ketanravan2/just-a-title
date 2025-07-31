@@ -46,7 +46,9 @@ export const IndividualAssignment: React.FC = () => {
   const handleAssignSerials = (
     serialIds: string[], 
     targetId: string, 
-    targetType: 'item' | 'lot' | 'package'
+    targetType: 'item' | 'lot' | 'package',
+    isTemporary?: boolean,
+    targetName?: string
   ) => {
     let actualTargetId = targetId;
     let actualTargetType = targetType;
@@ -78,7 +80,22 @@ export const IndividualAssignment: React.FC = () => {
       return;
     }
 
-    assignSerials(serialIds, actualTargetId, actualTargetType);
+    // Get the actual target name
+    let actualTargetName = targetName;
+    if (!actualTargetName) {
+      if (actualTargetType === 'item') {
+        const item = availableItems.find(i => i.id === actualTargetId);
+        actualTargetName = item?.name;
+      } else if (actualTargetType === 'lot') {
+        const lot = availableLots.find(l => l.id === actualTargetId);
+        actualTargetName = lot?.number;
+      } else if (actualTargetType === 'package') {
+        const pkg = availablePackages.find(p => p.id === actualTargetId);
+        actualTargetName = pkg?.identifier;
+      }
+    }
+
+    assignSerials(serialIds, actualTargetId, actualTargetType, isTemporary, actualTargetName);
   };
 
   const getTargetSerials = (targetId: string, targetType: 'item' | 'lot' | 'package') => {

@@ -3,10 +3,17 @@ export type SerialStatus = 'unassigned' | 'assigned' | 'reserved' | 'shipped';
 export interface Serial {
   id: string;
   serialNumber: string;
-  buyerPartNumber?: string;
+  buyerPartNumber: string; // Make required - serial is always tied to a specific part number
   status: SerialStatus;
   assignedTo?: string;
   assignedToType?: 'item' | 'lot' | 'package';
+  assignmentDetails?: {
+    targetId: string;
+    targetType: 'item' | 'lot' | 'package';
+    targetName: string;
+    assignedAt: Date;
+    isTemporary?: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
   customAttributes?: Record<string, string>;

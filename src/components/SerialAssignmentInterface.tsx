@@ -19,7 +19,7 @@ import { Search, CheckSquare, Square, Plus } from 'lucide-react';
 
 interface SerialAssignmentInterfaceProps {
   serials: Serial[];
-  onAssignSerials: (serialIds: string[], targetId: string, targetType: 'item' | 'lot' | 'package') => void;
+  onAssignSerials: (serialIds: string[], targetId: string, targetType: 'item' | 'lot' | 'package', isTemporary?: boolean, targetName?: string) => void;
   onCreateSerial?: (serialData: { serialNumber: string; buyerPartNumber: string; customAttributes: Record<string, string> }) => void;
   onBulkCreate?: (data: { prefix: string; startNumber: number; count: number; buyerPartNumber: string }) => void;
   onImportCSV?: (data: { serials: Array<{ serialNumber: string; customAttributes: Record<string, string> }>; buyerPartNumber: string }) => void;
@@ -165,7 +165,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
     
     const targetType = assignmentContext.type === 'pack' ? 'package' : assignmentContext.type;
     const serialIds = Array.from(selectedSerials);
-    onAssignSerials(serialIds, assignmentContext.targetId, targetType);
+    onAssignSerials(serialIds, assignmentContext.targetId, targetType, assignmentContext.isTemporary, assignmentContext.targetName);
     
     toast({
       title: "Assignment successful",
