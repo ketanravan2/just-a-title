@@ -1,9 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Package, FileBox, Users, TreePine, Grid3X3 } from "lucide-react";
+import { Package, FileBox, Users, TreePine, Grid3X3, Plus } from "lucide-react";
+import { useState } from "react";
+import { CreatePartNumberDialog } from "@/components/CreatePartNumberDialog";
+import { useAppState } from "@/contexts/AppStateContext";
 
 const Index = () => {
+  const { createPartNumber } = useAppState();
+  const [createPartDialog, setCreatePartDialog] = useState(false);
+
+  const handleCreatePartNumber = (data: {
+    partNumber: string;
+    buyerPartNumber: string;
+    name: string;
+    description: string;
+  }) => {
+    createPartNumber(data);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-12">
@@ -66,7 +81,26 @@ const Index = () => {
             </Button>
           </Link>
         </div>
+
+        <div className="flex justify-center mt-6">
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="gap-2"
+            onClick={() => setCreatePartDialog(true)}
+          >
+            <Plus className="w-5 h-5" />
+            Create Part Number
+          </Button>
+        </div>
       </div>
+
+      {/* Create part number dialog */}
+      <CreatePartNumberDialog
+        open={createPartDialog}
+        onOpenChange={setCreatePartDialog}
+        onCreatePartNumber={handleCreatePartNumber}
+      />
     </div>
   );
 };

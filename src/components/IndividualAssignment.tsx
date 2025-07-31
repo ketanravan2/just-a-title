@@ -9,7 +9,7 @@ import { Package, Box, Container, Plus, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const IndividualAssignment: React.FC = () => {
-  const { serials, asnHierarchy, assignSerials, createSerial, bulkCreateSerials, importSerialsFromCSV, linkChildSerials } = useAppState();
+  const { serials, asnHierarchy, assignSerials, createSerial, bulkCreateSerials, importSerialsFromCSV, linkChildSerials, setChildComponents, partNumbers } = useAppState();
   const { toast } = useToast();
   const [assignmentType, setAssignmentType] = useState<'items' | 'package'>('items');
   const [selectedItem, setSelectedItem] = useState<string>('');
@@ -263,6 +263,7 @@ export const IndividualAssignment: React.FC = () => {
           onBulkCreate={bulkCreateSerials}
           onImportCSV={importSerialsFromCSV}
           onLinkChildSerials={linkChildSerials}
+          onSetChildComponents={setChildComponents}
           availableBuyerPartNumbers={availableItems.map(item => item.buyerPartNumber)}
           hideAssignmentDialog={true}
           hideCreateButtons={assignmentType === 'package'} // Hide for package, enable for items/lots

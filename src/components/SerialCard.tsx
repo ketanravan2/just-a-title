@@ -3,7 +3,7 @@ import { Serial, SerialStatus } from '@/types/serial';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Info, Link2 } from 'lucide-react';
+import { Info, Link2, Settings } from 'lucide-react';
 
 interface SerialCardProps {
   serial: Serial;
@@ -11,6 +11,7 @@ interface SerialCardProps {
   onSelect: (serialId: string, event: React.MouseEvent) => void;
   onShowInfo: (serial: Serial) => void;
   onLinkChild: (serial: Serial) => void;
+  onSetChildComponents: (serial: Serial) => void;
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export const SerialCard: React.FC<SerialCardProps> = ({
   onSelect,
   onShowInfo,
   onLinkChild,
+  onSetChildComponents,
   className,
 }) => {
   const handleClick = (event: React.MouseEvent) => {
@@ -41,6 +43,11 @@ export const SerialCard: React.FC<SerialCardProps> = ({
   const handleLinkClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     onLinkChild(serial);
+  };
+
+  const handleSetChildComponentsClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    onSetChildComponents(serial);
   };
 
   const statusInfo = statusConfig[serial.status];
@@ -98,6 +105,13 @@ export const SerialCard: React.FC<SerialCardProps> = ({
         </div>
       )}
 
+      {/* Child components info */}
+      {serial.childComponents && serial.childComponents.length > 0 && (
+        <div className="text-xs text-muted-foreground mt-1">
+          {serial.childComponents.length} child components
+        </div>
+      )}
+
       {/* Action buttons */}
       <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
@@ -117,6 +131,15 @@ export const SerialCard: React.FC<SerialCardProps> = ({
           title="Link child serials"
         >
           <Link2 className="w-3 h-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSetChildComponentsClick}
+          className="h-6 w-6 p-0"
+          title="Set child components"
+        >
+          <Settings className="w-3 h-3" />
         </Button>
       </div>
     </div>

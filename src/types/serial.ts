@@ -1,5 +1,10 @@
 export type SerialStatus = 'unassigned' | 'assigned' | 'reserved' | 'shipped';
 
+export interface ChildComponent {
+  buyerPartNumber: string;
+  quantity: number;
+}
+
 export interface Serial {
   id: string;
   serialNumber: string;
@@ -19,6 +24,15 @@ export interface Serial {
   customAttributes?: Record<string, string>;
   childSerials?: string[];
   parentSerial?: string;
+  childComponents?: ChildComponent[];
+}
+
+export interface PartNumber {
+  id: string;
+  partNumber: string;
+  buyerPartNumber: string;
+  name: string;
+  description?: string;
 }
 
 export interface Item {

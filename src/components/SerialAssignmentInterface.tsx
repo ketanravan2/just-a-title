@@ -5,6 +5,7 @@ import { ActionBar } from './ActionBar';
 import { AssignmentDialog } from './AssignmentDialog';
 import { SerialInfoDialog } from './SerialInfoDialog';
 import { LinkChildSerialsDialog } from './LinkChildSerialsDialog';
+import { SetChildComponentDialog } from './SetChildComponentDialog';
 import { CreateSerialDialog } from './CreateSerialDialog';
 import { BulkCreateDialog } from './BulkCreateDialog';
 import { ImportCSVDialog } from './ImportCSVDialog';
@@ -24,6 +25,7 @@ interface SerialAssignmentInterfaceProps {
   onBulkCreate?: (data: { prefix: string; startNumber: number; count: number; buyerPartNumber: string }) => void;
   onImportCSV?: (data: { serials: Array<{ serialNumber: string; customAttributes: Record<string, string> }>; buyerPartNumber: string }) => void;
   onLinkChildSerials?: (parentSerialId: string, childSerialIds: string[]) => void;
+  onSetChildComponents?: (serialId: string, childComponents: Array<{buyerPartNumber: string; quantity: number}>) => void;
   availableBuyerPartNumbers?: string[];
   className?: string;
   hideAssignmentDialog?: boolean;
@@ -46,6 +48,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
   onBulkCreate,
   onImportCSV,
   onLinkChildSerials,
+  onSetChildComponents,
   availableBuyerPartNumbers = [],
   className,
   hideAssignmentDialog = false,
@@ -69,6 +72,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
   }>({ open: false, type: null });
   const [infoDialog, setInfoDialog] = useState<{ open: boolean; serial: Serial | null }>({ open: false, serial: null });
   const [linkDialog, setLinkDialog] = useState<{ open: boolean; serial: Serial | null }>({ open: false, serial: null });
+  const [setChildComponentDialog, setSetChildComponentDialog] = useState<{ open: boolean; serial: Serial | null }>({ open: false, serial: null });
   const [createDialog, setCreateDialog] = useState(false);
   const [bulkCreateDialog, setBulkCreateDialog] = useState(false);
   const [importDialog, setImportDialog] = useState(false);
@@ -207,6 +211,18 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
   const handleLinkChild = useCallback((serial: Serial) => {
     setLinkDialog({ open: true, serial });
   }, []);
+
+  const handleSetChildComponents = useCallback((serial: Serial) => {
+    setSetChildComponentDialog({ open: true, serial });
+  }, []);
+
+  const handleChildComponentsSet = useCallback((serialId: string, childComponents: Array<{buyerPartNumber: string; quantity: number}>) => {
+    onSetChildComponents?.(serialId, childComponents);
+    toast({
+      title: "Child components set",
+      description: `Child components updated for serial.`,
+    });
+  }, [onSetChildComponents, toast]);
 
   // Create handlers
   const handleCreateSerial = useCallback((data: { serialNumber: string; buyerPartNumber: string; customAttributes: Record<string, string> }) => {
@@ -357,6 +373,7 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
             onSelect={handleSerialSelect}
             onShowInfo={handleShowInfo}
             onLinkChild={handleLinkChild}
+            onSetChildComponents={handleSetChildComponents}
             className="animate-in fade-in-0 duration-200"
           />
         ))}
@@ -454,6 +471,17 @@ export const SerialAssignmentInterface: React.FC<SerialAssignmentInterfaceProps>
         onImportCSV={handleImportCSV}
         availableBuyerPartNumbers={availableBuyerPartNumbers}
         contextualBuyerPartNumber={contextualBuyerPartNumber}
+      />
+
+      {/* Set child components dialog */}
+      <SetChildComponentDialog
+        open={setChildComponentDialog.open}
+        onOpenChange={(open) => setSetChildComponentDialog({ open, serial: null })}
+        onSetChildComponents={handleChildComponentsSet}
+        availableBuyerPartNumbers={availableBuyerPartNumbers}
+        serialId={setChildComponentDialog.serial?.id || ''}
+        serialNumber={setChildComponentDialog.serial?.serialNumber || ''}
+        existingChildComponents={setChildComponentDialog.serial?.childComponents}
       />
     </div>
   );

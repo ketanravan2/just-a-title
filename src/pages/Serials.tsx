@@ -10,18 +10,13 @@ const Serials: React.FC = () => {
     bulkCreateSerials, 
     importSerialsFromCSV, 
     linkChildSerials,
-    asnHierarchy 
+    setChildComponents,
+    asnHierarchy,
+    partNumbers
   } = useAppState();
 
-  // Extract available buyer part numbers from ASN hierarchy
-  const availableBuyerPartNumbers = Array.from(
-    new Set(
-      asnHierarchy.items.flatMap(item => [
-        item.buyerPartNumber,
-        ...item.lots.map(lot => lot.buyerPartNumber)
-      ]).filter(Boolean)
-    )
-  );
+  // Extract available buyer part numbers from part numbers state
+  const availableBuyerPartNumbers = partNumbers.map(p => p.buyerPartNumber);
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,6 +28,7 @@ const Serials: React.FC = () => {
           onBulkCreate={bulkCreateSerials}
           onImportCSV={importSerialsFromCSV}
           onLinkChildSerials={linkChildSerials}
+          onSetChildComponents={setChildComponents}
           availableBuyerPartNumbers={availableBuyerPartNumbers}
           hideCreateButtons={false} // Enable create buttons in main serials view
         />

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Serial } from '@/types/serial';
+import { Serial, PartNumber, ChildComponent } from '@/types/serial';
 import { ASNHierarchy } from '@/types/asn';
 import { mockSerials } from '@/data/mockData';
 import { mockASNHierarchy } from '@/data/asnMockData';
@@ -7,6 +7,7 @@ import { mockASNHierarchy } from '@/data/asnMockData';
 interface AppStateContextType {
   serials: Serial[];
   asnHierarchy: ASNHierarchy;
+  partNumbers: PartNumber[];
   updateSerials: (serials: Serial[]) => void;
   assignSerials: (
     serialIds: string[], 
@@ -34,6 +35,13 @@ interface AppStateContextType {
     buyerPartNumber: string;
   }) => void;
   linkChildSerials: (parentSerialId: string, childSerialIds: string[]) => void;
+  setChildComponents: (serialId: string, childComponents: ChildComponent[]) => void;
+  createPartNumber: (data: {
+    partNumber: string;
+    buyerPartNumber: string;
+    name: string;
+    description: string;
+  }) => void;
   getSerialsByBuyerPartNumber: (buyerPartNumber: string) => Serial[];
   getAssignedSerials: (targetId: string, targetType: 'item' | 'lot' | 'package') => Serial[];
 }
@@ -43,6 +51,37 @@ const AppStateContext = createContext<AppStateContextType | undefined>(undefined
 export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [serials, setSerials] = useState<Serial[]>(mockSerials);
   const [asnHierarchy] = useState<ASNHierarchy>(mockASNHierarchy);
+  
+  // Initialize part numbers from ASN hierarchy
+  const [partNumbers, setPartNumbers] = useState<PartNumber[]>(() => {
+    const initialPartNumbers: PartNumber[] = [];
+    
+    asnHierarchy.items.forEach(item => {
+      if (item.buyerPartNumber && !initialPartNumbers.some(p => p.buyerPartNumber === item.buyerPartNumber)) {
+        initialPartNumbers.push({
+          id: `part-${item.id}`,
+          partNumber: item.partNumber,
+          buyerPartNumber: item.buyerPartNumber,
+          name: item.name,
+          description: item.description,
+        });
+      }
+      
+      item.lots.forEach(lot => {
+        if (lot.buyerPartNumber && !initialPartNumbers.some(p => p.buyerPartNumber === lot.buyerPartNumber)) {
+          initialPartNumbers.push({
+            id: `part-lot-${lot.id}`,
+            partNumber: lot.buyerPartNumber,
+            buyerPartNumber: lot.buyerPartNumber,
+            name: `${item.name} - ${lot.number}`,
+            description: lot.description,
+          });
+        }
+      });
+    });
+    
+    return initialPartNumbers;
+  });
 
   const updateSerials = (newSerials: Serial[]) => {
     setSerials(newSerials);
@@ -187,16 +226,51 @@ export const AppStateProvider: React.FC<{ children: ReactNode }> = ({ children }
     );
   };
 
+  const setChildComponents = (serialId: string, childComponents: ChildComponent[]) => {
+    setSerials(prevSerials =>
+      prevSerials.map(serial => {
+        if (serial.id === serialId) {
+          return {
+            ...serial,
+            childComponents,
+            updatedAt: new Date(),
+          };
+        }
+        return serial;
+      })
+    );
+  };
+
+  const createPartNumber = (data: {
+    partNumber: string;
+    buyerPartNumber: string;
+    name: string;
+    description: string;
+  }) => {
+    const newPartNumber: PartNumber = {
+      id: `part-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      partNumber: data.partNumber,
+      buyerPartNumber: data.buyerPartNumber,
+      name: data.name,
+      description: data.description,
+    };
+    
+    setPartNumbers(prevPartNumbers => [...prevPartNumbers, newPartNumber]);
+  };
+
   return (
     <AppStateContext.Provider value={{
       serials,
       asnHierarchy,
+      partNumbers,
       updateSerials,
       assignSerials,
       createSerial,
       bulkCreateSerials,
       importSerialsFromCSV,
       linkChildSerials,
+      setChildComponents,
+      createPartNumber,
       getSerialsByBuyerPartNumber,
       getAssignedSerials,
     }}>
